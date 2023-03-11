@@ -1,99 +1,67 @@
-import { Component } from 'react';
+import { useEffect, useState } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-notifications/lib/notifications.css';
 import { fetchImages } from 'services/image-api';
-import {Searchbar} from './Searchbar/Searchbar'
+import { Searchbar } from "./Searchbar/Searchbar";
 import {ImageGallery} from './ImageGallery/ImageGallery'
 import { Loader } from './Loader/Loader';
 import {Button} from './Button/Button'
 import css from './App.module.css'
 
-export class App extends Component {
-  state = {
-    imageName: "",
-    images: [],
-    status: "idle",
-    page: 1
-  }
+export const App = () => {
+  const [imageName, setImagename] = useState("");
+  const [imageArray, setimageArray] = useState([]);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-componentDidUpdate(_, prevState) {
-  
-const prevImageName = prevState.imageName
-const nextImageName = this.state.imageName
+  useEffect(() => {
+    if (!imageName) {
+      return;
+    }
+    setIsLoading(true)
 
-if(prevImageName !== nextImageName) {
-  this.setState({ status: "pending"})
-  fetchImages(this.state.imageName, this.state.page).then(images => {
-   if(images.totalHits === 0) {
-     this.setState({status: "idle"})
-     toast.error('Sorry, there are no images matching your search query. Please try again.')
+    fetchImages(imageName, page).then((images) => {
+     
+      if (images.totalHits === 0) {
+        setIsLoading(false)
+        toast.error('Sorry, there are no images matching your search query. Please try again.')
      return
-   }else{this.setState({images: images.hits, status: "resolved"
-   })
-  }})
-}
-}
+        
+      } else {
+        setimageArray([...imageArray, ...images.hits]);
+        setStatus("resolved");
+      }
+    }).finally(() => setIsLoading(false));
+  }, 
+  // eslint-disable-next-line 
+  [imageName, page]);   
 
-handleFormSubmit = (imageName) => {
-  this.setState({imageName, page: 1, images: []})
-}
+  const handleFormSubmit = (formImageName) => {
+    if(formImageName === imageName) {
+      return
+    }
+    setImagename(formImageName);
+    setimageArray([]);
+    setPage(1);
+    setStatus("");
+  };
 
-handleLoadMore = () => {
-  this.setState((prevState) => ({
-    page: prevState.page + 1
-  }))
-
-fetchImages(this.state.imageName, this.state.page + 1).then(images => {
-  this.setState((prevState) => {return {images: [...prevState.images, ...images.hits]}})
-})
-}
-
-  render() {
-
-    const {images, status} = this.state
-    return(
-      <div className={css.App}>
-      <Searchbar onFormSubmit={this.handleFormSubmit}/>
-
-{(status === "resolved") && (<>
-<ImageGallery images={images}/> 
-<Button onClick={this.handleLoadMore}/>
-</>)}
-{(status === "pending") && <Loader/>}
-<ToastContainer autoClose={2500} />
-      </div>
-    )
-  }
-}
-
-
-
-
-// componentDidUpdate(_, prevState) {
+  const updatePage = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
   
-//   const prevImageName = prevState.imageName
-//   const nextImageName = this.state.imageName
-//   const prevPage = prevState.page
-//   const nextPage = this.state.page
-  
-//   if(prevImageName !== nextImageName) {
-//     this.setState({ status: "pending", page: 1})
-  
-//     fetchImages(this.state.imageName, this.state.page).then(images => {
-//      if(images.totalHits === 0) {
-//        this.setState({status: "idle"})
-//        toast.error('Sorry, there are no images matching your search query. Please try again.')
-//        return
-//      }else{this.setState({images: images.hits, status: "resolved"})}
-//     }).catch(() => {this.setState({status: "idle"})}).finally(() => this.setState({tatus: "idle"}))
-//   }
-  
-//   if(prevPage !== nextPage) {
-//     fetchImages(this.state.imageName, this.state.page).then(images => {if(images.hits === 0){
-//      return this.setState({status: "idle"})
-//     }else{
-//       this.setState({images: [...this.state.images, ...images.hits]})
-//     }})
-//   }
-  
-//   }
+const shouldRenderLoadMoreBtn = imageArray.length > 0 && !isLoading
+
+  return (
+    <div className={css.App}>
+  <Searchbar onFormSubmit={handleFormSubmit} />
+  {status === "resolved" && (<ImageGallery images={imageArray}/>)}
+  {isLoading && <Loader/>}
+  {shouldRenderLoadMoreBtn && (<Button updatePage={updatePage}/>)}
+  <ToastContainer autoClose={2500} />
+    </div>
+  );
+};
+
+//

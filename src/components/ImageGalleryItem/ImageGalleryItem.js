@@ -1,39 +1,29 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useState } from 'react';
 import css from './ImageGalleryItem.module.css'
 import {Modal} from '../Modal/Modal'
 
 
-export class ImageGalleryItem extends Component {
+export const ImageGalleryItem = ({
+   image: { id, webformatURL, largeImageURL, tags }
+ }) => {
+   const [showModal, setShowModal] = useState(false)
 
-state = {
-showModal: false
-}
-openModal = () => {
-   this.setState({showModal: true})
-}
-closeModal = () => {
-   this.setState({showModal: false})
-}
-handleBackdropClick = (event) => {
-   if(event.target === event.currentTarget) {
-     this.setState({showModal: false})
-   }
-  }
 
-   render() {
-      const {image: {id, webformatURL,largeImageURL, tags}} = this.props
-
-      return(
-         <>
-             <li id={id} className={css.ImageGalleryItem}>
-    <img src={webformatURL} alt={tags} className={css.ImageGalleryItem__image} onClick={this.openModal}/>
-  </li>
-  {this.state.showModal && <Modal onBackdrop={this.handleBackdropClick} closeModal={this.closeModal} modalImage={largeImageURL} alt={tags}/>}
-</>
-      )
-   }
-}
+   return (
+     <>
+       <li id={id} className={css.ImageGalleryItem}>
+         <img
+           src={webformatURL}
+           alt={tags}
+           className={css.ImageGalleryItem__image}
+           onClick={() => setShowModal(true)}
+         />
+       </li>
+       {showModal && <Modal modalImage={largeImageURL} tags={tags}closeModal={setShowModal}/>}
+     </>
+   );
+ };
 
 
 ImageGalleryItem.propTypes = {

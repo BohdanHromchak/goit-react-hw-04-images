@@ -1,49 +1,38 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useEffect } from 'react';
 import css from './Modal.module.css'
 
-export class Modal extends Component {
+export const Modal = ({modalImage, tags, closeModal}) => {
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.onEsc);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onEsc);
-  }
+const onBackdrop = (event) => {
 
-  onEsc = event => {
-    if (event.code === 'Escape') {
-      this.props.closeModal();
-    }
-  };
-
-
-render() {
-  const {modalImage, onBackdrop} = this.props
-
-    return(<div className={css.Overlay} onClick={onBackdrop}>
-    <div className={css.Modal}>
-      <img src={modalImage} alt="#" />
-    </div>
-  </div>)
-  }
+if(event.target === event.currentTarget) {
+  closeModal(false)
+}
 }
 
+useEffect(() => {
+  window.addEventListener('keydown', onEsc);
+  return () => {
+    window.removeEventListener('keydown', onEsc);
+  };
+}, 
+// eslint-disable-next-line 
+[])
 
-
-
+const onEsc = () => {
+  closeModal(false)
+}
+    return(<div className={css.Overlay} onClick={onBackdrop}>
+    <div className={css.Modal}>
+      <img src={modalImage} alt={tags} />
+    </div>
+  </div>)
+}
 
 Modal.propTypes = {
   modalImage: PropTypes.string.isRequired,
-  onBackdrop: PropTypes.func.isRequired,
+  tags: PropTypes.string.isRequired,
+  closeModal: PropTypes.func.isRequired,
 }
 
-
-// export const Modal = ({modalImage, onBackdrop}) => {
-
-//   return(<div className={css.Overlay} onClick={onBackdrop}>
-//   <div className={css.Modal}>
-//     <img src={modalImage} alt="#" />
-//   </div>
-// </div>)
-// }
